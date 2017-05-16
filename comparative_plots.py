@@ -55,9 +55,9 @@ def mutual_info_score(labels_true, labels_pred, contingency=None):
           contingency_nm * log_outer)
     return mi.sum()
 
-
 if __name__ == "__main__":
     from os import listdir
+
     names = listdir('output_files')
     # for name in names:
 
@@ -65,55 +65,72 @@ if __name__ == "__main__":
     mat_contents = sio.loadmat('output_files/' + names[0])
     color_mat = mat_contents['colors']
     fig, ax = plt.subplots()
-    fig2, ax1=plt.subplots()
+    fig2, ax1 = plt.subplots()
     ax2 = ax.twinx()
     t_len = mat_contents['colors'].shape[1]
     print(t_len)
     t_vect = np.linspace(0, (t_len - 1) * 3, t_len)
     # ax3 = fig2.add_subplot(111, label="1")
-    entropy_mat=np.zeros((3,t_len))
+    entropy_mat = np.zeros((3, t_len))
     mi_mat = np.zeros((3, t_len))
-    
-    for cell in range(color_mat.shape[0]):
-        ax2.plot(t_vect,color_mat[cell, :, 0],linewidth=3,color='orange',alpha=0.25)
-        # ax3.plot(color_mat[cell, :, 1], color_mat[cell, :, 2], linewidth=3, color='orange', alpha=0.25)
+
+    # for cell in range(color_mat.shape[0]):
+    #     ax2.plot(t_vect, color_mat[cell, :, 0], linewidth=3, color='orange', alpha=0.25)
+    #     # ax3.plot(color_mat[cell, :, 1], color_mat[cell, :, 2], linewidth=3, color='orange', alpha=0.25)
 
     for j in np.arange(3):
 
         mat_contents = sio.loadmat('output_files/' + names[j])
-        color_mat=mat_contents['colors']
+        color_mat = mat_contents['colors']
         t_len = color_mat.shape[1]
         print(t_len)
         # for cell in range(color_mat.shape[0]):
-            # ax.plot(t_vect,color_mat[cell, :, 0],linewidth=3,color='teal',alpha=0.25)
+        # ax.plot(t_vect,color_mat[cell, :, 0],linewidth=3,color='teal',alpha=0.25)
         bins = num_bins_calculator(color_mat.shape[0])
-        entropies=[]
-        mis=[]
+        entropies = []
+        mis = []
         for t in range(t_len):
-            # entropies.append(calc_entropy(color_mat[:, t, 0],10))
-            # entropies.append(ee.entropy(ee.vectorize(color_mat[:, t, 0])))
-            entropies.append(np.std(color_mat[:, t, 0]))
+            entropies.append(calc_entropy(color_mat[:, t, 0], 10))
 
-            # mis.append(calc_MI(color_mat[:, t, 1],color_mat[:, t, 2],bins))
-            mis.append(np.corrcoef(color_mat[:, t, 1], color_mat[:, t, 2])[0][1])
-            # mis.append(ee.mi(ee.vectorize(color_mat[:, t, 1]),ee.vectorize(color_mat[:, t, 2])))
+            mis.append(calc_MI(color_mat[:, t, 1], color_mat[:, t, 2], bins))
 
-        entropy_mat[j,:]=entropies
+
+        entropy_mat[j, :] = entropies
         mi_mat[j, :] = mis
 
-    ax.errorbar(t_vect, np.mean(entropy_mat,0), yerr=np.std(entropy_mat,0),linewidth=3, color='teal')
-    ax1.errorbar(t_vect, np.mean(mi_mat, 0), yerr=np.std(mi_mat, 0), linewidth=3, color='purple')
+    entropy_mat2 = np.zeros((3, t_len))
+    mi_mat2 = np.zeros((3, t_len))
+    for k in np.arange(3):
 
-    ax1.set_ylabel('Correlation Coefficient')
-    # ax1.set_ylabel('Mutual Information (bits)')
+        mat_contents = sio.loadmat('output_files/' + names[k+3])
+        color_mat = mat_contents['colors']
+        t_len = color_mat.shape[1]
+        print(t_len)
+        # for cell in range(color_mat.shape[0]):
+        # ax.plot(t_vect,color_mat[cell, :, 0],linewidth=3,color='teal',alpha=0.25)
+        bins = num_bins_calculator(color_mat.shape[0])
+        entropies = []
+        mis = []
+        for t in range(t_len):
+            entropies.append(calc_entropy(color_mat[:, t, 0], 10))
+
+            mis.append(calc_MI(color_mat[:, t, 1], color_mat[:, t, 2], bins))
+
+        entropy_mat2[k, :] = entropies
+        mi_mat2[k, :] = mis
+
+    ax.errorbar(t_vect, np.mean(entropy_mat, 0), yerr=np.std(entropy_mat, 0), linewidth=3, color='teal')
+    ax.errorbar(t_vect, np.mean(entropy_mat2, 0), yerr=np.std(entropy_mat2, 0), linewidth=3, color='orange')
+
+    ax1.errorbar(t_vect, np.mean(mi_mat, 0), yerr=np.std(mi_mat, 0), linewidth=3, color='teal')
+    ax1.errorbar(t_vect, np.mean(mi_mat2, 0), yerr=np.std(mi_mat2, 0), linewidth=3, color='orange')
+    ax1.set_ylabel('Mutual Information (bits)')
     ax1.set_xlabel('Time (Minutes)')
-    ax.set_xlim([-5,253])
+    ax.set_xlim([-5, 253])
     ax1.set_xlim([-5, 253])
     ax.set_xlabel('time (minutes)')
-    ax.set_ylabel('CV')
-
-    # ax.set_ylabel('Entropy (bits)')
+    ax.set_ylabel('Entropy (bits)')
     ax2.set_ylabel('Flourescence (AU)')
-    fig.savefig('figures/1a.png',bbox_inches='tight')
+    fig.savefig('figures/2a.png', bbox_inches='tight')
 
-    fig2.savefig('figures/temp.png',bbox_inches='tight')
+    fig2.savefig('figures/2b.png', bbox_inches='tight')
